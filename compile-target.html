@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Compile MindAR Target — AR Card</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; }
+    button { padding: 0.75rem 1.25rem; font-size: 1rem; cursor: pointer; margin: 0.5rem 0; }
+    button:disabled { opacity: 0.5; cursor: wait; }
+    #log {
+      margin-top: 1rem; padding: 1rem; background: #f4f4f4; border-radius: 8px;
+      white-space: pre-wrap; font-family: ui-monospace, monospace; font-size: 14px;
+    }
+    .ok { color: #006747; font-weight: bold; }
+    .err { color: #c00; font-weight: bold; }
+    #status { padding: 0.75rem; border-radius: 8px; margin: 1rem 0; }
+    #status.missing { background: #fff3cd; border: 1px solid #ffc107; }
+    #status.ready { background: #d4edda; border: 1px solid #28a745; }
+    img { max-width: 100%; border: 1px solid #ccc; margin-top: 1rem; }
+    ol { padding-left: 1.25rem; }
+  </style>
+</head>
+<body>
+  <h1>Compile <code>targets.mind</code></h1>
+
+  <div id="status">Checking targets.mind…</div>
+
+  <p>This step teaches MindAR to recognize your <strong>AR card</strong> image. Do this on your <strong>PC</strong> (not phone).</p>
+
+  <ol>
+    <li>Click the button below and wait ~30–60 seconds.</li>
+    <li>Progress % will update in the log.</li>
+    <li>When done, <code>targets.mind</code> is saved to the project automatically.</li>
+    <li>Open <a href="./index.html">index.html</a> on your phone and point at the card.</li>
+  </ol>
+
+  <button id="compile-default" type="button">Compile assets/ar-card.png</button>
+  <br />
+  <label>Or pick PNG: <input type="file" id="file" accept="image/png,image/jpeg" /></label>
+
+  <div id="log">Ready. Click Compile to start.</div>
+  <img id="preview" alt="" hidden />
+
+  <script type="module">
+    const logEl = document.getElementById('log');
+    const btn = document.getElementById('compile-default');
+    const statusEl = document.getElementById('status');
+
+    const log = (msg) => { logEl.textContent += msg + '\n'; logEl.scrollTop = logEl.scrollHeight; };
+
+    async function checkStatus() {
+      try {
+        const res = await fetch('/api/targets-status');
+        const data = await res.json();
+        if (data.exists) {
+          statusEl.className = 'ready';
+          statusEl.innerHTML = `<span class="ok">✓ targets.mind is ready</span> (${Math.round(data.bytes / 1024)} KB) — <a href="./index.html">Open AR app</a>`;
+        } else {
+          statusEl.className = 'missing';
+          statusEl.innerHTML = '<strong>targets.mind not found yet.</strong> Click Compile below.';
+        }
+      } catch {
+        statusEl.className = 'missing';
+        statusEl.textContent = 'Run npm run serve:https first, then open this page via https://localhost:3443/compile-target.html';
+      }
+    }
+
+    async function saveToServer(buffer) {
+      const res = await fetch('/api/save-targets', {
+        method: 'POST',
+        body: buffer,
+      });
+      const text = await res.text();
+      try {
+        const data = JSON.parse(text);
+        if (!data.ok) throw new Error(data.error || 'Server save failed');
+        return data;
+      } catch {
+        throw new Error(
+          res.ok
+            ? 'Invalid server response'
+            : 'Server has no save API — stop the server (Ctrl+C), run npm run serve:https again, then recompile.'
+        );
+      }
+    }
+
+    function downloadFallback(buffer) {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([buffer]));
+      a.download = 'targets.mind';
+      a.click();
+    }
+
+    async function compileFromBitmap(bitmap) {
+      logEl.textContent = '';
+      btn.disabled = true;
+      document.getElementById('file').disabled = true;
+
+      try {
+        log(`Image: ${bitmap.width}×${bitmap.height}px`);
+        log('Loading MindAR compiler…');
+
+        const { Compiler } = await import('https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js');
+        log('Compiling — please wait 30–60s…');
+
+        const compiler = new Compiler();
+        await compiler.compileImageTargets([bitmap], (p) => {
+          logEl.textContent = logEl.textContent.replace(/Progress: \d+%\n?$/m, '');
+          log(`Progress: ${Math.round(p)}%`);
+        });
+
+        const buffer = await compiler.exportData();
+        log(`Compiled ${(buffer.byteLength / 1024).toFixed(0)} KB`);
+
+        log('Saving to project folder…');
+        try {
+          await saveToServer(buffer);
+          log('');
+          log('SUCCESS — targets.mind saved to project folder!');
+        } catch (saveErr) {
+          log('');
+          log('Auto-save failed: ' + saveErr.message);
+          log('Downloading targets.mind — move it to:');
+          log('  dhaka-ar-metro/targets.mind');
+          downloadFallback(buffer);
+        }
+        log('Next: open index.html on your phone and point at the card.');
+
+        await checkStatus();
+      } catch (err) {
+        log('');
+        log('ERROR: ' + (err.message || err));
+        console.error(err);
+      } finally {
+        btn.disabled = false;
+        document.getElementById('file').disabled = false;
+      }
+    }
+
+    btn.addEventListener('click', async () => {
+      try {
+        log('Loading assets/ar-card.png…');
+        const res = await fetch('./assets/ar-card.png');
+        if (!res.ok) throw new Error('ar-card.png not found — run: npm run export-card');
+        const blob = await res.blob();
+        const bitmap = await createImageBitmap(blob);
+        document.getElementById('preview').src = URL.createObjectURL(blob);
+        document.getElementById('preview').hidden = false;
+        await compileFromBitmap(bitmap);
+      } catch (err) {
+        log('ERROR: ' + err.message);
+        btn.disabled = false;
+      }
+    });
+
+    document.getElementById('file').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      document.getElementById('preview').src = URL.createObjectURL(file);
+      document.getElementById('preview').hidden = false;
+      await compileFromBitmap(await createImageBitmap(file));
+    });
+
+    checkStatus();
+  </script>
+</body>
+</html>

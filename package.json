@@ -1,0 +1,28 @@
+{
+  "name": "dhaka-ar-metro",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "export-png": "node scripts/export-png.js",
+    "export-card": "node scripts/export-card.js",
+    "export-overlay": "node scripts/export-map-overlay.js",
+    "extract-lines": "node scripts/extract-lines.js",
+    "parse-svg": "node scripts/parse-svg.js",
+    "compile-mind": "node scripts/compile-mind.js",
+    "serve": "npx serve .",
+    "serve:https": "node scripts/serve-https.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "canvas": "^3.2.3",
+    "qrcode": "^1.5.4",
+    "selfsigned": "^5.5.0",
+    "serve-handler": "^6.1.7",
+    "sharp": "^0.35.2"
+  }
+}

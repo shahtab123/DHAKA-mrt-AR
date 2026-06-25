@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <title>Dhaka Metro AR Map</title>
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  <style>
+    body { margin: 0; overflow: hidden; touch-action: none; }
+    .hint {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      padding: 0.75rem 1rem; font: 14px/1.4 system-ui, sans-serif;
+      background: rgba(0,0,0,0.55); color: #fff; text-align: center;
+      pointer-events: none; z-index: 10;
+    }
+    .zoom-ui {
+      position: fixed; top: 0.75rem; right: 0.75rem; z-index: 10;
+      display: flex; gap: 0.4rem;
+    }
+    .zoom-ui button {
+      width: 2.5rem; height: 2.5rem; font-size: 1.25rem;
+      border: none; border-radius: 8px; background: rgba(255,255,255,0.92);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.25); cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <p class="hint">Point at the AR card · Pinch or use +/− to zoom</p>
+  <div class="zoom-ui" aria-label="Zoom controls">
+    <button type="button" id="zoom-out" title="Zoom out">−</button>
+    <button type="button" id="zoom-in" title="Zoom in">+</button>
+  </div>
+
+  <a-scene
+    mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiLoading: yes; uiScanning: yes; uiError: yes; filterMinCF: 0.001; filterBeta: 0.01; warmupTolerance: 10; missTolerance: 10"
+    color-space="sRGB"
+    renderer="colorManagement: true, physicallyCorrectLights"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false">
+
+    <a-assets timeout="120000">
+      <!--
+        Exact Wikipedia SVG artwork: lines, station markers, all station names.
+        Regenerate: npm run export-overlay (from dhaka-metro-map.svg)
+      -->
+      <img id="mapOverlay" src="./assets/dhaka-metro-overlay.png" crossorigin="anonymous" />
+    </a-assets>
+
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+    <a-entity mindar-image-target="targetIndex: 0">
+      <a-entity id="metro-overlay">
+        <a-image
+          id="map-lines-img"
+          src="#mapOverlay"
+          position="0 0 0.001"
+          width="1"
+          height="1.024"
+          material="shader: flat; transparent: true; alphaTest: 0.02; opacity: 1; side: double"
+        ></a-image>
+      </a-entity>
+    </a-entity>
+  </a-scene>
+
+  <script>
+    // viewBox of https://en.wikipedia.org/wiki/File:Dhaka_MRT_Network_(en).svg
+    const VB_W = 578;
+    const VB_H = 592.6;
+    const MAP_ASPECT = VB_H / VB_W;
+
+    const DEFAULT_SCALE = 1.85;
+    const MIN_SCALE = 1.0;
+    const MAX_SCALE = 4.0;
+    const SCALE_STEP = 0.15;
+
+    let mapScale = DEFAULT_SCALE;
+    let overlayEl = null;
+    let pinchStartDist = 0;
+    let pinchStartScale = DEFAULT_SCALE;
+
+    function applyScale(s) {
+      mapScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, s));
+      if (overlayEl) {
+        overlayEl.setAttribute('scale', `${mapScale} ${mapScale} ${mapScale}`);
+      }
+    }
+
+    function touchDistance(touches) {
+      const dx = touches[0].clientX - touches[1].clientX;
+      const dy = touches[0].clientY - touches[1].clientY;
+      return Math.hypot(dx, dy);
+    }
+
+    document.querySelector('a-scene').addEventListener('loaded', () => {
+      overlayEl = document.getElementById('metro-overlay');
+      overlayEl.setAttribute('position', '0 0 0');
+      applyScale(DEFAULT_SCALE);
+
+      const img = document.getElementById('map-lines-img');
+      img.setAttribute('height', String(MAP_ASPECT));
+    });
+
+    document.getElementById('zoom-in').addEventListener('click', () => applyScale(mapScale + SCALE_STEP));
+    document.getElementById('zoom-out').addEventListener('click', () => applyScale(mapScale - SCALE_STEP));
+
+    document.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        pinchStartDist = touchDistance(e.touches);
+        pinchStartScale = mapScale;
+      }
+    }, { passive: true });
+
+    document.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2 && pinchStartDist > 0) {
+        applyScale(pinchStartScale * (touchDistance(e.touches) / pinchStartDist));
+      }
+    }, { passive: true });
+
+    document.addEventListener('touchend', (e) => {
+      if (e.touches.length < 2) pinchStartDist = 0;
+    }, { passive: true });
+  </script>
+</body>
+</html>
