@@ -2,6 +2,8 @@
 
 Point your phone at a **printed AR card**. The full Dhaka MRT map (lines + station labels from the [Wikipedia SVG](https://en.wikipedia.org/wiki/File:Dhaka_MRT_Network_(en).svg)) appears floating above the card.
 
+![Dhaka MRT network map](assets/dhaka-metro-map.png)
+
 Built with [A-Frame 1.6.0](https://aframe.io/) + [MindAR 1.2.5](https://github.com/hiukim/mind-ar-js).
 
 ---
