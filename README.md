@@ -1,8 +1,8 @@
 # Dhaka Metro AR Map — Setup Guide
 
-Point your phone at the printed AR card to see the full MRT map floating above it.
+Point your phone at the printed card or a screen showing the card to see the full MRT map floating above it.
 
-![Dhaka MRT Network Map](assets/dhaka-metro-map.png)
+<img src="assets/dhaka-metro-map.png" width="380" alt="Dhaka MRT Network Map" />
 
 ---
 
@@ -59,27 +59,32 @@ You only need to redo this step if you change the card image.
 
 ---
 
-## Step 5 — Print the card
+## Step 5 — Print the card or use a screen
 
+Use `assets/Metro card.png` as your AR target. Either option works:
+
+**Option A — Print**
 | | |
 |---|---|
-| **File to print** | `assets/Metro card.png` |
 | **Recommended size** | **A6 landscape** (~148 × 105 mm) or postcard size |
 | **Minimum size** | Credit-card size (tracking will be weaker) |
 | **Paper** | Matte cardstock or photo paper — avoid glossy |
 
 Print at 100% scale. Do not crop the QR code.
 
+**Option B — Screen**
+Open `assets/Metro card.png` on another phone, tablet, or monitor and point your camera at it. Good for quick testing — printed cards usually track more reliably.
+
 ---
 
 ## Step 6 — Open AR on your phone
 
 1. Phone and PC on the **same Wi-Fi**.
-2. Open the URL from Step 2, or scan the QR on the printed card.
+2. Open the URL from Step 2, or scan the QR on the card.
 3. **First visit:** Chrome → **Advanced** → **Proceed** (self-signed certificate warning is normal).
 4. Tap **Allow** for camera access.
 5. Use **Chrome on Android**. Safari on iOS has limited Web AR support.
-6. Point the camera at the printed card. Pinch or use **+/−** to zoom the map.
+6. Point the camera at the printed card or screen from Step 5. Pinch or use **+/−** to zoom the map.
 
 ---
 
