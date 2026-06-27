@@ -15,19 +15,28 @@
       background: rgba(0,0,0,0.55); color: #fff; text-align: center;
       pointer-events: none; z-index: 10;
     }
-    .zoom-ui {
-      position: fixed; top: 0.75rem; right: 0.75rem; z-index: 10;
-      display: flex; gap: 0.4rem;
+    .zoom-ui, .text-ui {
+      position: fixed; top: 0.75rem; z-index: 10;
     }
-    .zoom-ui button {
+    .zoom-ui { right: 0.75rem; display: flex; gap: 0.4rem; }
+    .text-ui { left: 0.75rem; }
+    .zoom-ui button, .text-ui button {
       width: 2.5rem; height: 2.5rem; font-size: 1.25rem;
       border: none; border-radius: 8px; background: rgba(255,255,255,0.92);
       box-shadow: 0 1px 4px rgba(0,0,0,0.25); cursor: pointer;
+      font-weight: 700;
+    }
+    .text-ui button.light-mode {
+      background: #222;
+      color: #fff;
     }
   </style>
 </head>
 <body>
-  <p class="hint">Point at the AR card · Pinch or use +/− to zoom</p>
+  <p class="hint">Point at the AR card · Pinch or use +/− to zoom · Tap A for label color</p>
+  <div class="text-ui">
+    <button type="button" id="text-color-btn" title="Toggle label color (black / white)">A</button>
+  </div>
   <div class="zoom-ui" aria-label="Zoom controls">
     <button type="button" id="zoom-out" title="Zoom out">−</button>
     <button type="button" id="zoom-in" title="Zoom in">+</button>
@@ -41,11 +50,8 @@
     device-orientation-permission-ui="enabled: false">
 
     <a-assets timeout="120000">
-      <!--
-        Exact Wikipedia SVG artwork: lines, station markers, all station names.
-        Regenerate: npm run export-overlay (from dhaka-metro-map.svg)
-      -->
-      <img id="mapOverlay" src="./assets/dhaka-metro-overlay.png" crossorigin="anonymous" />
+      <img id="mapOverlayBlack" src="./assets/dhaka-metro-overlay.png" crossorigin="anonymous" />
+      <img id="mapOverlayWhite" src="./assets/dhaka-metro-overlay-white.png" crossorigin="anonymous" />
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
@@ -53,8 +59,8 @@
     <a-entity mindar-image-target="targetIndex: 0">
       <a-entity id="metro-overlay">
         <a-image
-          id="map-lines-img"
-          src="#mapOverlay"
+          id="map-img"
+          src="#mapOverlayWhite"
           position="0 0 0.001"
           width="1"
           height="1.024"
@@ -65,7 +71,6 @@
   </a-scene>
 
   <script>
-    // viewBox of https://en.wikipedia.org/wiki/File:Dhaka_MRT_Network_(en).svg
     const VB_W = 578;
     const VB_H = 592.6;
     const MAP_ASPECT = VB_H / VB_W;
@@ -77,6 +82,8 @@
 
     let mapScale = DEFAULT_SCALE;
     let overlayEl = null;
+    let mapEl = null;
+    let textLight = true;
     let pinchStartDist = 0;
     let pinchStartScale = DEFAULT_SCALE;
 
@@ -87,6 +94,12 @@
       }
     }
 
+    function setTextColor(light) {
+      textLight = light;
+      mapEl.setAttribute('src', light ? '#mapOverlayWhite' : '#mapOverlayBlack');
+      document.getElementById('text-color-btn').classList.toggle('light-mode', light);
+    }
+
     function touchDistance(touches) {
       const dx = touches[0].clientX - touches[1].clientX;
       const dy = touches[0].clientY - touches[1].clientY;
@@ -95,11 +108,14 @@
 
     document.querySelector('a-scene').addEventListener('loaded', () => {
       overlayEl = document.getElementById('metro-overlay');
+      mapEl = document.getElementById('map-img');
       overlayEl.setAttribute('position', '0 0 0');
       applyScale(DEFAULT_SCALE);
+      mapEl.setAttribute('height', String(MAP_ASPECT));
+    });
 
-      const img = document.getElementById('map-lines-img');
-      img.setAttribute('height', String(MAP_ASPECT));
+    document.getElementById('text-color-btn').addEventListener('click', () => {
+      setTextColor(!textLight);
     });
 
     document.getElementById('zoom-in').addEventListener('click', () => applyScale(mapScale + SCALE_STEP));

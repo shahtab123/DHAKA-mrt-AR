@@ -34,7 +34,7 @@
     <li>Open <a href="./index.html">index.html</a> on your phone and point at the card.</li>
   </ol>
 
-  <button id="compile-default" type="button">Compile assets/ar-card.png</button>
+  <button id="compile-default" type="button">Compile assets/Metro card.png</button>
   <br />
   <label>Or pick PNG: <input type="file" id="file" accept="image/png,image/jpeg" /></label>
 
@@ -139,9 +139,9 @@
 
     btn.addEventListener('click', async () => {
       try {
-        log('Loading assets/ar-card.png…');
-        const res = await fetch('./assets/ar-card.png');
-        if (!res.ok) throw new Error('ar-card.png not found — run: npm run export-card');
+        log('Loading assets/Metro card.png…');
+        const res = await fetch('./assets/Metro card.png');
+        if (!res.ok) throw new Error('Metro card.png not found in assets/');
         const blob = await res.blob();
         const bitmap = await createImageBitmap(blob);
         document.getElementById('preview').src = URL.createObjectURL(blob);
