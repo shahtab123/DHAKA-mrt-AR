@@ -2,12 +2,9 @@
 
 Point your phone at the printed card or a screen showing the card to see the full MRT map floating above it.
 
-<table>
-  <tr>
-    <td><img src="assets/dhaka-metro-map.png" width="340" alt="Dhaka MRT Network Map" /></td>
-    <td><img src="assets/ar%20example.jpeg" width="340" alt="Dhaka Metro AR in action" /></td>
-  </tr>
-</table>
+**No app required** — this is 100% browser-based Web AR. Just open the link in Chrome on your phone, allow camera access, and point at the card.
+
+<img src="assets/ar%20example.jpeg" width="300" alt="Dhaka Metro AR example" />
 
 ---
 
