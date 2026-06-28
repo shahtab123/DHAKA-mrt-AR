@@ -6,6 +6,12 @@ Point your phone at the printed card or a screen showing the card to see the ful
 
 <img src="assets/ar%20example.jpeg" width="300" alt="Dhaka Metro AR example" />
 
+## Video tutorial
+
+<a href="https://youtu.be/CBglrFvOGWc?si=4FUf6cmyBCRDtDlU">
+  <img src="https://img.youtube.com/vi/CBglrFvOGWc/hqdefault.jpg" width="480" alt="Watch the Dhaka Metro AR setup tutorial on YouTube">
+</a>
+
 ---
 
 ## Step 1 — Install
